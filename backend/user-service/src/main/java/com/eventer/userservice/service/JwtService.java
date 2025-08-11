@@ -50,15 +50,6 @@ public class JwtService {
                 .compact();
     }
 
-    public String getIdFromRefreshToken(String refreshToken) {
-        return Jwts.parser()
-                .verifyWith((SecretKey) refreshKey)
-                .build()
-                .parseSignedClaims(refreshToken)
-                .getPayload()
-                .getSubject();
-    }
-
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         log.info("Authorization: {}", bearerToken);
@@ -88,7 +79,7 @@ public class JwtService {
         }
     }
 
-    public String extractUsername(String token, boolean isRefreshToken) {
+    public String extractUserId(String token, boolean isRefreshToken) {
         return extractClaim(token, Claims::getSubject, isRefreshToken);
     }
 

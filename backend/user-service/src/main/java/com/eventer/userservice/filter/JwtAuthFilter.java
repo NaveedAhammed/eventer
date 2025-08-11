@@ -117,7 +117,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private void setSecurityContext(String accessToken, HttpServletRequest request) {
         if (SecurityContextHolder.getContext().getAuthentication() != null) return;
 
-        String email = jwtService.extractUsername(accessToken, false);
+        String email = jwtService.extractUserId(accessToken, false);
         String role = jwtService.extractRole(accessToken, false);
 
         GrantedAuthority authority = new SimpleGrantedAuthority(role);

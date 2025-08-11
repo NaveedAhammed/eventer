@@ -9,10 +9,14 @@ import com.eventer.userservice.mapper.UserMapper;
 import com.eventer.userservice.repository.UserRepository;
 import com.eventer.userservice.service.AuthService;
 import com.eventer.userservice.service.JwtService;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Slf4j
 @Service
