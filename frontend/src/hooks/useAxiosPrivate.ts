@@ -15,14 +15,22 @@ const useAxiosPrivate = () => {
 				}
 				return config;
 			},
-			(error) => Promise.reject(error)
+			(err) => {
+				Promise.reject(err);
+			}
 		);
 
-		const responseIntercept = axiosPrivate.interceptors.response.use(
-			(response) => response,
+		const responseInercept = axiosPrivate.interceptors.response.use(
+			(res) => res,
 			async (error) => {
 				const prevRequest = error?.config;
-				if (error?.response.status === 403 && !prevRequest?.sent) {
+				console.log(error?.response?.data?.errorCode);
+				if (
+					error?.response?.status === 403 &&
+					error?.response?.data?.errorCode ===
+						"INVALID_ACCESS_TOKEN" &&
+					!prevRequest?.sent
+				) {
 					prevRequest.sent = true;
 					const newAccessToken = await refresh();
 					prevRequest.headers[
@@ -35,7 +43,7 @@ const useAxiosPrivate = () => {
 		);
 
 		return () => {
-			axiosPrivate.interceptors.response.eject(responseIntercept);
+			axiosPrivate.interceptors.response.eject(responseInercept);
 			axiosPrivate.interceptors.request.eject(requestIntercept);
 		};
 	}, [accessToken, refresh]);

@@ -1,11 +1,11 @@
 package com.eventer.userservice.service;
 
+import com.eventer.userservice.dto.OAuth2UserInfo;
 import com.eventer.userservice.entity.User;
-import com.eventer.userservice.entity.enums.AuthProvider;
-import com.eventer.userservice.entity.enums.Role;
 import com.eventer.userservice.exception.InternalServiceException;
-import com.eventer.userservice.exception.UserAlreadyExistsException;
+import com.eventer.userservice.mapper.UserMapper;
 import com.eventer.userservice.repository.UserRepository;
+import com.eventer.userservice.utils.OAuth2UserInfoFactory;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,11 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -30,9 +27,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import static com.eventer.userservice.constants.Constants.*;
 
@@ -51,57 +45,18 @@ public class OAuth2HandlerService implements AuthenticationSuccessHandler, Authe
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
     private final OAuth2AuthorizedClientService authorizedClientService;
+    private final OAuth2UserInfoFactory oAuth2UserInfoFactory;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
-        OAuth2User oAuth2User = token.getPrincipal();
+        OAuth2UserInfo userInfo = oAuth2UserInfoFactory.getOAuth2UserInfo(
+                request,
+                (OAuth2AuthenticationToken) authentication,
+                (OAuth2User) authentication.getPrincipal(),
+                authorizedClientService
+        );
 
-        String registrationId = token.getAuthorizedClientRegistrationId();
-        AuthProvider authProvider = AuthProvider.fromValue(registrationId);
-
-        String name = oAuth2User.getAttribute("name");
-        String email = oAuth2User.getAttribute("email");
-
-        if (email == null && authProvider == AuthProvider.GITHUB) {
-            OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
-                    token.getAuthorizedClientRegistrationId(),
-                    token.getName()
-            );
-
-            String accessToken = client.getAccessToken().getTokenValue();
-            email = fetchGitHubPrimaryEmail(accessToken);
-        }
-
-        String avatar = authProvider == AuthProvider.GOOGLE ? oAuth2User.getAttribute("picture") : oAuth2User.getAttribute("avatar_url");
-
-        if (email == null) {
-            log.error("Email is not provided by: {}", authProvider);
-            throw new InternalServiceException("Email is not provided by: " + authProvider);
-        }
-
-        Optional<User> existingAuthUser = userRepository.findByEmail(email);
-
-        User user;
-
-        if(existingAuthUser.isPresent()){
-            user = existingAuthUser.get();
-            if (user.getAuthProvider() != authProvider) {
-                log.error("User with email {} already exists with authProvider {}", email, user.getAuthProvider());
-                throw new UserAlreadyExistsException("User with email " + email + " already exists with authProvider " + user.getAuthProvider());
-            }
-        }else{
-            String role = request.getSession().getAttribute(ROLE_PARAM).toString();
-
-            user = User.builder()
-                    .email(email)
-                    .authProvider(authProvider)
-                    .role(Role.fromValue(role))
-                    .profilePictureUrl(avatar)
-                    .verified(true)
-                    .build();
-            user = userRepository.save(user);
-        }
+        User user = findOrCreateUser(userInfo);
         generateTokensAndRedirect(user, response);
     }
 
@@ -113,6 +68,20 @@ public class OAuth2HandlerService implements AuthenticationSuccessHandler, Authe
         String redirectUri = OAUTH2_FAILURE_REDIRECT_URI + "?error=" + errorMessage;
 
         response.sendRedirect(redirectUri);
+    }
+
+    private User findOrCreateUser(OAuth2UserInfo oAuth2UserInfo) {
+        User user = userRepository.findByEmail(oAuth2UserInfo.getEmail()).orElse(null);
+
+        if (user != null) {
+            if (user.getAuthProvider() != oAuth2UserInfo.getAuthProvider()){
+                throw new InternalServiceException("User already exists with auth provider " + oAuth2UserInfo.getAuthProvider().name());
+            }
+            return user;
+        }
+        user = UserMapper.toUser(oAuth2UserInfo);
+        user = userRepository.save(user);
+        return user;
     }
 
     private void generateTokensAndRedirect(User user, HttpServletResponse response) throws IOException {
@@ -131,30 +100,5 @@ public class OAuth2HandlerService implements AuthenticationSuccessHandler, Authe
                 .build().toString();
 
         response.sendRedirect(redirectUri);
-    }
-
-    private String fetchGitHubPrimaryEmail(String accessToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        HttpEntity<Void> request = new HttpEntity<>(headers);
-
-        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                "https://api.github.com/user/emails",
-                HttpMethod.GET,
-                request,
-                new ParameterizedTypeReference<>() {}
-        );
-
-        if (response.getBody() == null || response.getBody().isEmpty() || !response.getStatusCode().is2xxSuccessful()) {
-            throw new InternalServiceException("Something went wrong. Please try again later.");
-        }
-
-        return response.getBody().stream()
-                .filter(emailObj -> Boolean.TRUE.equals(emailObj.get("primary")))
-                .map(emailObj -> (String) emailObj.get("email"))
-                .findFirst()
-                .orElse(null);
     }
 }

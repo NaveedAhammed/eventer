@@ -2,6 +2,7 @@ package com.eventer.userservice.service.impl;
 
 import com.eventer.userservice.dto.*;
 import com.eventer.userservice.entity.User;
+import com.eventer.userservice.exception.InternalServiceException;
 import com.eventer.userservice.exception.InvalidCredentialsException;
 import com.eventer.userservice.exception.ResourceNotFoundException;
 import com.eventer.userservice.exception.UserAlreadyExistsException;
@@ -85,5 +86,21 @@ public class AuthServiceImpl implements AuthService {
                 )
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    /**
+     *
+     * @param refreshToken Refresh Token
+     * @return New Access Token
+     */
+    @Override
+    public String refresh(String refreshToken) {
+        if (!jwtService.validateToken(refreshToken, true)) {
+            throw new InternalServiceException("Invalid token");
+        }
+        UUID id = UUID.fromString(jwtService.extractUserId(refreshToken, true));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "userId", id.toString()));
+        return jwtService.generateToken(user, false);
     }
 }

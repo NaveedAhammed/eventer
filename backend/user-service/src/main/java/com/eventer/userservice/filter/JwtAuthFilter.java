@@ -39,7 +39,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_URLS = List.of(
             "/api/auth/register",
             "/api/auth/login",
-            "/login"
+            "/api/auth/refresh-access-token"
     );
 
     private final JwtService jwtService;

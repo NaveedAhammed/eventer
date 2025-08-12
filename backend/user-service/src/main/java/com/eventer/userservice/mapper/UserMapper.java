@@ -1,5 +1,6 @@
 package com.eventer.userservice.mapper;
 
+import com.eventer.userservice.dto.OAuth2UserInfo;
 import com.eventer.userservice.dto.RegisterRequestDto;
 import com.eventer.userservice.dto.UserDto;
 import com.eventer.userservice.entity.User;
@@ -14,6 +15,16 @@ public class UserMapper {
                 .lastName(requestDto.getLastName())
                 .role(Role.fromValue(requestDto.getRole()))
                 .authProvider(AuthProvider.LOCAL)
+                .build();
+    }
+
+    public static User toUser(OAuth2UserInfo userInfo) {
+        return User.builder()
+                .email(userInfo.getEmail())
+                .firstName(userInfo.getFirstName())
+                .profilePictureUrl(userInfo.getProfilePictureUrl())
+                .authProvider(userInfo.getAuthProvider())
+                .role(userInfo.getRole())
                 .build();
     }
 

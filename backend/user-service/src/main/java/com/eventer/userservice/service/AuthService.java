@@ -18,4 +18,11 @@ public interface AuthService {
      * @return AuthResultDto Object which consist of accessToken, refreshToken and UserDto
      */
     AuthResultDto login(LoginRequestDto requestDto);
+
+    /**
+     *
+     * @param refreshToken Refresh Token
+     * @return New Access Token
+     */
+    String refresh(String refreshToken);
 }
