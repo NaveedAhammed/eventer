@@ -3,9 +3,7 @@ package com.eventer.auth.entity;
 import com.eventer.auth.entity.enums.AuthProvider;
 import com.eventer.auth.entity.enums.Role;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -14,9 +12,12 @@ import java.util.UUID;
 @ToString
 @Entity
 @Table(name = "auth_users")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AuthUser extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID authUserId;
 
     @Column(unique = true, nullable = false)
