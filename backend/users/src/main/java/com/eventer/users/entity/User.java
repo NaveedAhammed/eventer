@@ -13,11 +13,12 @@ import java.util.UUID;
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User extends BaseEntity{
     @Id
     private UUID userId;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String firstName;
 
     @Column(nullable = true)

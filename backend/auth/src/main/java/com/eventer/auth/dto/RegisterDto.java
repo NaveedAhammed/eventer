@@ -10,18 +10,16 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class RegisterDto {
-    @NotEmpty(message = "First Name is required")
-    @Size(min = 5, max = 20, message = "First Name must be between 5 and 20 characters")
-    private String firstName;
-
-    private String lastName;
-
     @NotEmpty(message = "Email address is required")
     @Email(message = "Email address is invalid")
     private String email;
 
     @NotEmpty(message = "Username is required")
-    @Size(min = 3, max = 15, message = "Username must be between 3 and 15 characters")
+    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
+    @Pattern(
+            regexp = "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+            message = "Username may contain letters, digits, and single hyphens; it cannot start or end with a hyphen."
+    )
     private String username;
 
     @NotEmpty(message = "Password is required")

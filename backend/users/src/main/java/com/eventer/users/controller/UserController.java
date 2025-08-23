@@ -1,16 +1,14 @@
 package com.eventer.users.controller;
 
 import com.eventer.users.dto.CreateProfileDto;
+import com.eventer.users.dto.UserDto;
 import com.eventer.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -26,5 +24,11 @@ public class UserController {
         log.debug("CreateProfileDto : {}", createProfileDto);
         userService.createUserProfile(createProfileDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserDto> fetchProfile(@RequestHeader("X-User-Id") String userId) {
+        UserDto userDto = userService.getUserProfileById(userId);
+        return ResponseEntity.ok(userDto);
     }
 }

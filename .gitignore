@@ -3,3 +3,7 @@ application.yaml
 .idea
 
 target/
+
+node_modules/
+
+.env

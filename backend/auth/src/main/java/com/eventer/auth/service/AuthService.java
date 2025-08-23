@@ -1,23 +1,29 @@
 package com.eventer.auth.service;
 
-import com.eventer.auth.dto.AuthResponseDto;
-import com.eventer.auth.dto.LoginDto;
-import com.eventer.auth.dto.RegisterDto;
+import com.eventer.auth.dto.*;
 
 public interface AuthService {
     /**
      * Registers a new user with the provided details.
      *
      * @param registerDto the {@link RegisterDto} object containing registration details
-     * @return an {@link AuthResponseDto} containing access and refresh tokens, and user details
+     * @return an {@link AuthTokensDto} containing access and refresh tokens, and user details
      */
-    AuthResponseDto register(RegisterDto registerDto);
+    AuthTokensDto register(RegisterDto registerDto);
+
+    /**
+     * Logs in or registers a user using OAuth2 provider information.
+     *
+     * @param oAuth2UserInfo the {@link OAuth2UserInfo} object containing profile details
+     * @return an {@link AuthTokensDto} containing access and refresh tokens, and user details
+     */
+    AuthTokensDto oAuth2(OAuth2UserInfo oAuth2UserInfo);
 
     /**
      * Logs in a user with the provided credentials.
      *
      * @param loginDto the {@link LoginDto} object containing login credentials
-     * @return an {@link AuthResponseDto} containing access and refresh tokens, and user details
+     * @return an {@link AuthTokensDto} containing access and refresh tokens, and user details
      */
-    AuthResponseDto login(LoginDto loginDto);
+    AuthTokensDto login(LoginDto loginDto);
 }

@@ -23,15 +23,13 @@ public class UserMapper {
 
     public static User toUser(CreateProfileDto createProfileDto) {
         UUID userId = UUID.fromString(createProfileDto.getUserId());
-        return new User(
-                userId,
-                createProfileDto.getFirstName(),
-                createProfileDto.getLastName(),
-                createProfileDto.getUsername(),
-                createProfileDto.getEmail(),
-                createProfileDto.getAuthProvider(),
-                createProfileDto.getRole(),
-                createProfileDto.getProfilePictureUrl()
-        );
+        return User.builder()
+                .userId(userId)
+                .email(createProfileDto.getEmail())
+                .username(createProfileDto.getUsername())
+                .role(createProfileDto.getRole())
+                .authProvider(createProfileDto.getAuthProvider())
+                .profilePictureUrl(createProfileDto.getProfilePictureUrl())
+                .build();
     }
 }

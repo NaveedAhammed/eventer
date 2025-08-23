@@ -1,9 +1,11 @@
 package com.eventer.auth.controller;
 
-import com.eventer.auth.dto.AuthResponseDto;
+import com.eventer.auth.dto.AuthTokensDto;
 import com.eventer.auth.dto.LoginDto;
 import com.eventer.auth.dto.RegisterDto;
 import com.eventer.auth.service.AuthService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
+import static com.eventer.auth.constants.AuthConstants.ACCESS_TOKEN_PARAM;
+import static com.eventer.auth.constants.AuthConstants.REFRESH_TOKEN_PARAM;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
@@ -23,16 +30,31 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterDto registerDto) {
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterDto registerDto, HttpServletResponse response) {
         log.debug("Registering user with details: {}", registerDto);
-        AuthResponseDto response = authService.register(registerDto);
-        return ResponseEntity.ok(response);
+        AuthTokensDto authTokensDto = authService.register(registerDto);
+
+        setRefreshTokenCookie(response, authTokensDto.getRefreshToken());
+
+        return ResponseEntity.ok(Map.of(ACCESS_TOKEN_PARAM, authTokensDto.getAccessToken()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginDto loginDto) {
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginDto loginDto, HttpServletResponse response) {
         log.debug("Logging in user with credentials: {}", loginDto);
-        AuthResponseDto response = authService.login(loginDto);
-        return ResponseEntity.ok(response);
+        AuthTokensDto authTokensDto = authService.login(loginDto);
+
+        setRefreshTokenCookie(response, authTokensDto.getRefreshToken());
+
+        return ResponseEntity.ok(Map.of(ACCESS_TOKEN_PARAM, authTokensDto.getAccessToken()));
+    }
+
+    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken){
+        Cookie cookie = new Cookie(REFRESH_TOKEN_PARAM, refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+        log.debug("Added refresh_token cookie");
     }
 }

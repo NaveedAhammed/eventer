@@ -1,9 +1,6 @@
 package com.eventer.auth.mapper;
 
-import com.eventer.auth.dto.AuthResponseDto;
-import com.eventer.auth.dto.AuthUserDto;
-import com.eventer.auth.dto.CreateProfileDto;
-import com.eventer.auth.dto.RegisterDto;
+import com.eventer.auth.dto.*;
 import com.eventer.auth.entity.AuthUser;
 import com.eventer.auth.entity.enums.AuthProvider;
 import com.eventer.auth.entity.enums.Role;
@@ -11,12 +8,20 @@ import com.eventer.auth.entity.enums.Role;
 public class AuthMapper {
     public static CreateProfileDto mapToCreateProfileDto(RegisterDto registerDto) {
         return CreateProfileDto.builder()
-                .firstName(registerDto.getFirstName())
-                .lastName(registerDto.getLastName())
                 .email(registerDto.getEmail())
                 .username(registerDto.getUsername())
                 .role(Role.fromValue(registerDto.getRole()).name())
                 .authProvider(AuthProvider.LOCAL.name())
+                .build();
+    }
+
+    public static CreateProfileDto mapToCreateProfileDto(OAuth2UserInfo oAuth2UserInfo) {
+        return CreateProfileDto.builder()
+                .email(oAuth2UserInfo.getEmail())
+                .username(oAuth2UserInfo.getUsername())
+                .role(oAuth2UserInfo.getRole().name())
+                .authProvider(oAuth2UserInfo.getAuthProvider().name())
+                .profilePictureUrl(oAuth2UserInfo.getProfilePictureUrl())
                 .build();
     }
 
@@ -29,21 +34,19 @@ public class AuthMapper {
                 .build();
     }
 
-    public static AuthUserDto toAuthUserDto(AuthUser authUser) {
-        return AuthUserDto.builder()
-                .authUserId(authUser.getAuthUserId().toString())
-                .email(authUser.getEmail())
-                .username(authUser.getUsername())
-                .role(authUser.getRole().name())
-                .authProvider(authUser.getAuthProvider().name())
+    public static AuthUser toAuthUser(OAuth2UserInfo oAuth2UserInfo) {
+        return AuthUser.builder()
+                .email(oAuth2UserInfo.getEmail())
+                .username(oAuth2UserInfo.getUsername())
+                .authProvider(oAuth2UserInfo.getAuthProvider())
+                .role(oAuth2UserInfo.getRole())
                 .build();
     }
 
-    public static AuthResponseDto toAuthResponseDto(AuthUser authUser, String accessToken, String refreshToken) {
-        return AuthResponseDto.builder()
+    public static AuthTokensDto toAuthResponseDto(String accessToken, String refreshToken) {
+        return AuthTokensDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .authUser(toAuthUserDto(authUser))
                 .build();
     }
 }
