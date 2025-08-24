@@ -26,4 +26,12 @@ public interface AuthService {
      * @return an {@link AuthTokensDto} containing access and refresh tokens, and user details
      */
     AuthTokensDto login(LoginDto loginDto);
+
+    /**
+     * Refreshes the access token using the provided refresh token.
+     *
+     * @param refreshToken the refresh token
+     * @return a new access token
+     */
+    String refresh(String refreshToken);
 }

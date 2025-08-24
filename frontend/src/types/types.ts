@@ -13,5 +13,5 @@ export interface User {
 	lastName?: string;
 	role: string;
 	authProvider: string;
-	profilePicture?: string;
+	profilePictureUrl?: string;
 }

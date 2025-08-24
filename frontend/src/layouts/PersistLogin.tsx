@@ -3,7 +3,7 @@ import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 
-const USERS_SERVICE_BASE_URL = import.meta.env.VITE_AUTH_SERVICE_BASE_URL;
+const USERS_SERVICE_BASE_URL = import.meta.env.VITE_USERS_SERVICE_BASE_URL;
 
 const PersistLogin = () => {
 	const axiosPrivate = useAxiosPrivate();
@@ -15,7 +15,7 @@ const PersistLogin = () => {
 			try {
 				setLoading(true);
 				const res = await axiosPrivate.get(
-					`${USERS_SERVICE_BASE_URL}/users/me`
+					`${USERS_SERVICE_BASE_URL}/fetch-profile`
 				);
 				setUser(res.data);
 			} catch (err) {

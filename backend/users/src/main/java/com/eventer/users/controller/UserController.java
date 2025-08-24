@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Validated
 public class UserController {
@@ -26,7 +26,7 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @GetMapping("/profile")
+    @GetMapping("/fetch-profile")
     public ResponseEntity<UserDto> fetchProfile(@RequestHeader("X-User-Id") String userId) {
         UserDto userDto = userService.getUserProfileById(userId);
         return ResponseEntity.ok(userDto);

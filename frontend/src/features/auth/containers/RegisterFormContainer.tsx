@@ -12,7 +12,7 @@ import { getErrorMessage } from "@/utils/helpers";
 import useAuth from "@/hooks/useAuth";
 
 const RegisterFormContainer = () => {
-	const { setAccessToken } = useAuth();
+	const { setAccessToken, setUser } = useAuth();
 
 	const navigate = useNavigate();
 	const {
@@ -26,7 +26,13 @@ const RegisterFormContainer = () => {
 	const onSubmit = async (data: RegisterSchema) => {
 		try {
 			const accessToken = await authService.register(data);
+			if (!accessToken) {
+				toast.error("Something went wrong, Please try again later!.");
+			}
+
+			const user = await authService.fetchProfile(accessToken);
 			setAccessToken(accessToken);
+			setUser(user);
 			navigate("/", { replace: true });
 		} catch (error) {
 			const message = getErrorMessage(error);
@@ -36,12 +42,12 @@ const RegisterFormContainer = () => {
 
 	const googleOAuthHandler = () => {
 		window.location.href =
-			"http://localhost:8080/oauth2/authorization/google?role=ORGANIZER";
+			"http://localhost:8072/auth/oauth2/authorization/google?role=USER";
 	};
 
 	const githubOAuthHandler = () => {
 		window.location.href =
-			"http://localhost:8080/oauth2/authorization/github?role=USER";
+			"http://localhost:8072/auth/oauth2/authorization/github?role=USER";
 	};
 
 	return (

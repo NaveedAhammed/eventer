@@ -11,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -23,7 +20,7 @@ import static com.eventer.auth.constants.AuthConstants.REFRESH_TOKEN_PARAM;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Validated
 public class AuthController {
@@ -47,6 +44,12 @@ public class AuthController {
         setRefreshTokenCookie(response, authTokensDto.getRefreshToken());
 
         return ResponseEntity.ok(Map.of(ACCESS_TOKEN_PARAM, authTokensDto.getAccessToken()));
+    }
+
+    @GetMapping("/refresh-access-token")
+    public ResponseEntity<Map<String, String>> refreshAccessToken(@CookieValue(REFRESH_TOKEN_PARAM) String refreshToken) {
+        String accessToken = authService.refresh(refreshToken);
+        return ResponseEntity.ok(Map.of(ACCESS_TOKEN_PARAM, accessToken));
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken){

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "users", fallbackFactory = UsersFeignClient.UsersFeignFallback.class)
 public interface UsersFeignClient {
-    @PostMapping("/api/users/create-profile")
+    @PostMapping("/api/v1/create-profile")
     ResponseEntity<Void> createProfile(@RequestBody CreateProfileDto createProfileDto);
 
     @Component

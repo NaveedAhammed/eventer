@@ -8,7 +8,7 @@ const useRefreshToken = () => {
 
 	const refresh = async () => {
 		const response = await axiosWithCredentials.get(
-			`${AUTH_SERVICE_BASE_URL}/auth/refresh-access-token`
+			`${AUTH_SERVICE_BASE_URL}/refresh-access-token`
 		);
 		setAccessToken(response.data.access_token);
 		return response.data.access_token;

@@ -3,12 +3,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "@/components/Button/Button";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-import { MdOutlinePhoneIphone } from "react-icons/md";
 import LoginForm from "../components/LoginForm";
 import authService from "../services/authService";
 import toast from "react-hot-toast";
 import { getErrorMessage } from "@/utils/helpers";
-import { useNavigate } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
 import { loginSchema, type LoginSchema } from "../schema/loginSchema";
 
@@ -25,20 +23,34 @@ const LoginFormContainer = ({
 		resolver: zodResolver(loginSchema),
 	});
 
-	const navigate = useNavigate();
-	const { setAccessToken } = useAuth();
+	const { setAccessToken, setUser } = useAuth();
 
 	const onSubmit = async (data: LoginSchema) => {
 		try {
 			const accessToken = await authService.login(data);
-			if (accessToken) {
-				navigationHandler();
-				setAccessToken(accessToken);
+			if (!accessToken) {
+				toast.error("Something went wrong, Please try again later!.");
 			}
+
+			const user = await authService.fetchProfile(accessToken);
+			setAccessToken(accessToken);
+			setUser(user);
+
+			navigationHandler();
 		} catch (error) {
 			const message = getErrorMessage(error);
 			toast.error(message);
 		}
+	};
+
+	const googleOAuthHandler = () => {
+		window.location.href =
+			"http://localhost:8072/auth/oauth2/authorization/google?role=USER";
+	};
+
+	const githubOAuthHandler = () => {
+		window.location.href =
+			"http://localhost:8072/auth/oauth2/authorization/github?role=USER";
 	};
 
 	return (
@@ -58,21 +70,18 @@ const LoginFormContainer = ({
 
 			<Button
 				variant="outline"
-				className="gap-2 text-sm mt-6"
-				onClick={() =>
-					navigate("/login?mode=mobile", { replace: true })
-				}
+				className="gap-2 text-sm mt-4"
+				onClick={googleOAuthHandler}
 			>
-				<MdOutlinePhoneIphone size={20} />
-				<span>Continue with Phone</span>
-			</Button>
-
-			<Button variant="outline" className="gap-2 text-sm mt-4">
 				<FcGoogle size={20} />
 				<span>Continue with Google</span>
 			</Button>
 
-			<Button variant="outline" className="gap-2 text-sm mt-4">
+			<Button
+				variant="outline"
+				className="gap-2 text-sm mt-4"
+				onClick={githubOAuthHandler}
+			>
 				<FaGithub size={20} />
 				<span>Continue with GitHub</span>
 			</Button>

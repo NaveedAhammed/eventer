@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -69,6 +71,8 @@ public class AuthServiceImpl implements AuthService {
             if (authUser.getAuthProvider() != oAuth2UserInfo.getAuthProvider()){
                 throw new InternalServiceException("User already exists with auth provider " + authUser.getAuthProvider().name());
             }
+
+            return getAuthTokensDto(authUser);
         }
 
         authUser = AuthMapper.toAuthUser(oAuth2UserInfo);
@@ -103,6 +107,23 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return getAuthTokensDto(authUser);
+    }
+
+    /**
+     * Refreshes the access token using the provided refresh token.
+     *
+     * @param refreshToken the refresh token
+     * @return a new access token
+     */
+    @Override
+    public String refresh(String refreshToken) {
+        if (!jwtService.validateToken(refreshToken, true)) {
+            throw new InternalServiceException("Invalid token");
+        }
+        UUID id = UUID.fromString(jwtService.extractUserId(refreshToken, true));
+        AuthUser authUser = authUserRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("AuthUser", "userId", id.toString()));
+        return jwtService.generateToken(authUser, false);
     }
 
     /**

@@ -1,0 +1,126 @@
+services:
+  auth_db:
+    image: postgres:15
+    container_name: auth_db
+    environment:
+      POSTGRES_USER: naveed
+      POSTGRES_PASSWORD: naveed
+      POSTGRES_DB: auth_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U naveed -d auth_db" ]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - eventer
+
+  users_db:
+    image: postgres:15
+    container_name: users_db
+    environment:
+      POSTGRES_USER: naveed
+      POSTGRES_PASSWORD: naveed
+      POSTGRES_DB: users_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U naveed -d users_db" ]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - eventer
+
+  eurekaserver:
+    image: shaik549/eurekaserver:v1.0.0
+    container_name: eurekaserver
+    healthcheck:
+      test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - eventer
+
+  auth:
+    image: shaik549/auth:v1.0.0
+    container_name: auth
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth_db:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: naveed
+      SPRING_DATASOURCE_PASSWORD: naveed
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - eventer
+    depends_on:
+      auth_db:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+
+  users:
+    image: shaik549/users:v1.0.0
+    container_name: users
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://users_db:5432/users_db
+      SPRING_DATASOURCE_USERNAME: naveed
+      SPRING_DATASOURCE_PASSWORD: naveed
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+    healthcheck:
+      test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - eventer
+    depends_on:
+      users_db:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+
+  gatewayserver:
+    image: shaik549/gatewayserver:v1.0.0
+    container_name: gatewayserver
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+    ports:
+      - "8072:8072"
+    networks:
+      - eventer
+    healthcheck:
+      test: "curl --fail --silent localhost:8072/actuator/health/readiness | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      eurekaserver:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      users:
+        condition: service_healthy
+
+  eventer:
+    image: shaik549/eventer:v1.0.0
+    container_name: eventer
+    ports:
+      - "5173:80"
+    networks:
+      - eventer
+    depends_on:
+      gatewayserver:
+        condition: service_healthy
+
+networks:
+  eventer:
+    driver: bridge

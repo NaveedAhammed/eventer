@@ -8,6 +8,7 @@ import OAuthSuccess from "@/features/auth/pages/OAuthSuccess";
 import PersistLogin from "@/layouts/PersistLogin";
 import RequireAuth from "@/layouts/RequireAuth";
 import OAuthFailure from "@/features/auth/pages/OAuthFailure";
+import AuthFallback from "@/layouts/AuthFallback";
 
 export const router = createBrowserRouter([
 	{
@@ -17,20 +18,25 @@ export const router = createBrowserRouter([
 				element: <AppLayout />,
 				children: [
 					{
-						path: "/register",
-						element: <Register />,
-					},
-					{
-						path: "/login",
-						element: <Login />,
-					},
-					{
-						path: "/oauth2/success",
-						element: <OAuthSuccess />,
-					},
-					{
-						path: "/oauth2/failure",
-						element: <OAuthFailure />,
+						element: <AuthFallback />,
+						children: [
+							{
+								path: "/register",
+								element: <Register />,
+							},
+							{
+								path: "/login",
+								element: <Login />,
+							},
+							{
+								path: "/oauth2/success",
+								element: <OAuthSuccess />,
+							},
+							{
+								path: "/oauth2/failure",
+								element: <OAuthFailure />,
+							},
+						],
 					},
 					{
 						element: <RequireAuth />,
